@@ -1,0 +1,17 @@
+CSE_251B__PA3_winter_2022.pdf
+Basic Weighting loss.png
+basic_weighting_train_losses.npy
+basic_weighting_validation_losses.npy
+No Weighting Augmented Loss.png
+No Weighting Loss.png
+no_weighting_augmented_train_losses.npy
+no_weighting_augmented_validation_losses.npy
+no_weighting_train_losses.npy
+no_weighting_validation_losses.npy
+U-Net Loss.png
+custom_network_prototype.py
+custom_train_losses.npy
+Custom Architecture Loss.png
+custom_val_losses.npy
+unet_trainloss_1.csv
+unet_valloss_1.csv
