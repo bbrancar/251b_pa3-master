@@ -24,11 +24,6 @@ the training is done without weighted loss. User can set weighting_method as 'ba
 For this model to work, user needs to run starter_custom.py file. Model architecture can be found in custom_model.py Similar 
 to previous part, user can change the parameters such as learning_rate, batch_size, epochs, early_stop, augment_data and 
 weighting_method to play with the training.
- 
--Transfer Learning
-Architecture of transfer learning model can be found in res34_fcn.py. If user wants to try this model, they can follow
-transfer_learning.ipynb notebook. Just be careful about the dataset path, user should change that variable in the notebook
-accordingly.
 
 -UNet Architecture
 The architecture of UNet model can be found in unet.py file. In order to train and/or test the model, user should run
