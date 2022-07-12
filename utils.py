@@ -47,7 +47,6 @@ def iou(pred, target, n_classes = 10):
     pred_inds = pred == cls
     target_inds = target == cls
     
-    #BB - implemented intersection/union
     intersection = (pred_inds*target_inds).sum().item()
     union = pred_inds.sum().item() + target_inds.sum().item() - intersection
     
@@ -61,7 +60,6 @@ def iou(pred, target, n_classes = 10):
 
 def pixel_acc(pred, target, n_classes = 10):
   
-  #BB - Keep track of total count
   correct = 0
   total = 0
 
@@ -71,15 +69,12 @@ def pixel_acc(pred, target, n_classes = 10):
 
   for cls in range(n_classes-1):
 
-    #BB - Identify preds and targets
     pred_inds = pred == cls
     target_inds = target == cls
     
-    #BB - Add to correct if correct, and add to total samps
     correct += (pred_inds*target_inds).sum().item()
     total += target_inds.sum().item()
   
-  #BB - Return fraction
   return correct/total
 
 def dice_loss(preds, target, eps=1e-7):
