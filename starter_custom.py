@@ -11,25 +11,18 @@ import gc
 import copy
 
 
-#BB - set device choice
+#set device choice
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu') 
 
 #model save path:
 FILE = 'custom_model.pth'
 
-#BB - Batch size?
 batchsize = 32
 
 augment_data = False
 train_dataset = TASDataset('tas500v1.1', augment_data=augment_data) 
 val_dataset = TASDataset('tas500v1.1', eval=True, mode='val')
 test_dataset = TASDataset('tas500v1.1', eval=True, mode='test')
-
-
-# train_dataset = TASDataset('tas500v1.1') 
-# val_dataset = TASDataset('tas500v1.1', eval=True, mode='val')
-# test_dataset = TASDataset('tas500v1.1', eval=True, mode='test')
-
 
 train_loader = DataLoader(dataset=train_dataset, batch_size=batchsize, shuffle=True)
 val_loader = DataLoader(dataset=val_dataset, batch_size=batchsize, shuffle=False)
@@ -40,41 +33,28 @@ def init_weights(m):
         torch.nn.init.xavier_uniform_(m.weight.data)
         torch.nn.init.normal_(m.bias.data) #xavier not applicable for biases   
 
-#BB - Changed epochs
 epochs = 300 
 
 #N epochs patience
 epoch_no_imp = 0
 epoch_stop = 10
 
-# Choose an appropriate loss function from https://pytorch.org/docs/stable/_modules/torch/nn/modules/loss.html
-# The below function will return None by default, in order to get loss_weights, give weighting_method argument
 loss_weights = get_loss_weights(weighting_method='basic')
-# loss_weights = get_loss_weights()
+
 if loss_weights is not None:
     loss_weights = loss_weights.float().to(device)
-    criterion = nn.CrossEntropyLoss(weight=loss_weights).to(device)#BB - Chose CEL
+    criterion = nn.CrossEntropyLoss(weight=loss_weights).to(device)
 else:
-    criterion = nn.CrossEntropyLoss().to(device) #BB - Chose CEL
+    criterion = nn.CrossEntropyLoss().to(device)
 n_class = 10
 fcn_model = Res_Unet(n_class=n_class)
 fcn_model.apply(init_weights)
 
-#BB - Adding lr:
 lr = 0.01
 
 
 fcn_model = fcn_model.to(device) #transfer the model to the device
-
-#BB - added optimizer
-#optimizer = optim.Adam(fcn_model.parameters(), lr=0.01) # choose an optimizer
 optimizer = optim.AdamW(fcn_model.parameters(), weight_decay = .001, lr=lr)
-
-#BB - Adding lr scheduler:
-#scheduler = ExponentialLR(optimizer, 0.9) ###added schedule
-
-
-
 
 print(device)
 def train():
@@ -93,27 +73,21 @@ def train():
         ts = time.time()
         for iter, (inputs, labels) in enumerate(train_loader):
             
-            #BB - reset optimizer gradients
+            #reset optimizer gradients
             optimizer.zero_grad()
 
             # both inputs and labels have to reside in the same device as the model's
             inputs = inputs.to(device) #transfer the input to the same device as the model's
             labels = labels.type(torch.LongTensor).to(device) #transfer the labels to the same device as the model's
 
-            outputs = fcn_model(inputs) #we will not need to transfer the output, it will be automatically in the same device as the model's!
+            outputs = fcn_model(inputs)
             
-            #BB
             loss = criterion(outputs, labels) #calculate loss
             losses.append(loss.item())
             
-            #BB - backpropagate
             loss.backward()
 
-            #BB - update the weights
             optimizer.step()
-        
-        #Turn on if you want to mess with scheduling lr
-        #scheduler.step()
             
             if iter % 10 == 0:
                 print("epoch{}, iter{}, loss: {}".format(epoch, iter, loss.item()))
@@ -152,33 +126,32 @@ def val(epoch):
     mean_iou_scores = []
     accuracy = []
 
-    with torch.no_grad(): # we don't need to calculate the gradient in the validation/testing
+    with torch.no_grad():
 
         for iter, (input, label) in enumerate(val_loader):
 
-            # both inputs and labels have to reside in the same device as the model's
-            input = input.to(device) #transfer the input to the same device as the model's
-            label = label.type(torch.LongTensor).to(device) #transfer the labels to the same device as the model's
+            input = input.to(device) 
+            label = label.type(torch.LongTensor).to(device)
 
             print(input.shape)
             output = fcn_model(input)
 
             print(output.shape)
-            loss = criterion(output, label) #calculate the loss
-            losses.append(loss.item()) #call .item() to get the value from a tensor. The tensor can reside in gpu but item() will still work 
+            loss = criterion(output, label)
+            losses.append(loss.item())
 
-            pred = torch.argmax(output, dim=1) # Make sure to include an argmax to get the prediction from the outputs of your model
+            pred = torch.argmax(output, dim=1)
 
-            mean_iou_scores.append(np.nanmean(iou(pred, label, n_class)))  # Complete this function in the util, notice the use of np.nanmean() here
+            mean_iou_scores.append(np.nanmean(iou(pred, label, n_class)))
         
-            accuracy.append(pixel_acc(pred, label)) # Complete this function in the util
+            accuracy.append(pixel_acc(pred, label))
 
 
     print(f"\nLoss at epoch: {epoch} is {np.mean(losses)}")
     print(f"IoU at epoch: {epoch} is {np.mean(mean_iou_scores)}")
     print(f"Pixel acc at epoch: {epoch} is {np.mean(accuracy)}\n")
 
-    fcn_model.train() #DONT FORGET TO TURN THE TRAIN MODE BACK ON TO ENABLE BATCHNORM/DROPOUT!!
+    fcn_model.train()
 
     return np.mean(mean_iou_scores), np.mean(accuracy), np.mean(losses)
 
@@ -193,13 +166,12 @@ def test():
     mean_iou_scores = []
     accuracy = []
 
-    with torch.no_grad(): # we don't need to calculate the gradient in the validation/testing
+    with torch.no_grad():
 
         for iter, (input, label) in enumerate(test_loader):
 
-            # both inputs and labels have to reside in the same device as the model's
-            input = input.to(device) #transfer the input to the same device as the model's
-            label = label.type(torch.LongTensor).to(device) #transfer the labels to the same device as the model's
+            input = input.to(device) 
+            label = label.type(torch.LongTensor).to(device)
             output = fcn_model(input)
 
             loss = criterion(output, label) #calculate the loss
