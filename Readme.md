@@ -1,4 +1,4 @@
-CSE 251B - Programming Assignment 3 Readme
+Image Segmentation Project
 ------------------------------------------
 In order to make any model run in this project, you need to have dataset folder in the same folder with the other files.
 utils.py includes the performance measurement, segmentation visualization and some other intermediate functions.
